@@ -1,9 +1,8 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core'
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core'
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 import { TranslateModule } from '@ngx-translate/core'
 import { Observable } from 'rxjs'
 
-import { FieldsetModule } from 'primeng/fieldset'
 import { FloatLabelModule } from 'primeng/floatlabel'
 import { InputTextModule } from 'primeng/inputtext'
 import { TooltipModule } from 'primeng/tooltip'
@@ -16,7 +15,7 @@ import { Help } from 'src/app/shared/generated'
 @Component({
   selector: 'app-ocx-help-item-editor',
   standalone: true,
-  imports: [FieldsetModule, FloatLabelModule, InputTextModule, ReactiveFormsModule, TranslateModule, TooltipModule],
+  imports: [FloatLabelModule, InputTextModule, ReactiveFormsModule, TranslateModule, TooltipModule],
   templateUrl: './help-item-editor-form.component.html',
   styleUrl: './help-item-editor-form.component.scss'
 })
@@ -28,20 +27,15 @@ export class HelpItemEditorFormComponent
   @Output() primaryButtonEnabled: EventEmitter<boolean> = new EventEmitter()
 
   public dialogResult!: Help // same type as used in 'DialogResult<Help>'
-  public formGroup: FormGroup
+  public formGroup: FormGroup = inject(FormBuilder).group({
+    productName: new FormControl({ value: null, disabled: true }, [Validators.required]),
+    itemId: new FormControl(null, [Validators.required, Validators.minLength(2), Validators.maxLength(255)]),
+    baseUrl: new FormControl(null, [Validators.required, Validators.maxLength(255)]),
+    resourceUrl: new FormControl(null, [Validators.maxLength(255)]),
+    context: new FormControl(null, [Validators.maxLength(255)])
+  })
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly portalMessageService: PortalMessageService
-  ) {
-    this.formGroup = this.fb.group({
-      productName: new FormControl({ value: null, disabled: true }, [Validators.required]),
-      itemId: new FormControl(null, [Validators.required, Validators.minLength(2), Validators.maxLength(255)]),
-      baseUrl: new FormControl(null, [Validators.required, Validators.maxLength(255)]),
-      resourceUrl: new FormControl(null, [Validators.maxLength(255)]),
-      context: new FormControl(null, [Validators.maxLength(255)])
-    })
-  }
+  private readonly portalMessageService = inject(PortalMessageService)
 
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['helpItem'] && this.helpItem) {
